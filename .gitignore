@@ -1,0 +1,8 @@
+AUTHORS
+CHANGELOG
+.tox
+htmlcov
+__pycache__
+*.egg-info
+.coverage
+.pytest_cache
