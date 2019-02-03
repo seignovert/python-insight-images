@@ -13,7 +13,7 @@ Python package to list and download all original images from
 
 |InSight|
 
-.. |InSight| image:: img/catch.gif
+.. |InSight| image:: catch.gif
         :target: https://mars.nasa.gov/raw_images/1801/
 
 Install
