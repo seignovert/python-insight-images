@@ -7,7 +7,6 @@ from .image import Image
 
 API_URL = 'https://mars.nasa.gov'
 VERSION = 'v1'
-CAMERAS = ['IDC', 'ICC']
 
 class Api(object):
     '''
@@ -46,10 +45,8 @@ class Api(object):
             If HTML error is thrown by the API (HTML code not equal 200)
         '''
         resp = requests.get(self.api + url)
-        if resp.ok:
-            return resp.json()
-        else:
-            resp.raise_for_status()
+        assert resp.ok, resp.raise_for_status()
+        return resp.json()
 
     @property
     def latest(self):
@@ -67,8 +64,7 @@ class Api(object):
             Thown on API reauest failed
         '''
         json = self.get('/insight/latest')
-        if not json['success']:
-            raise IOError(f"API latest query failed:\n{json}")
+        assert json['success'], f"API latest query failed:\n{json}"
 
         return json['latest_data']
 
@@ -117,7 +113,7 @@ class Api(object):
         '''
         json = self.get_page(url, 0)
         data = json['items']
-        nb_pages = int(json['total']/json['per_page']) + 1
+        nb_pages = int((json['total']-1)/json['per_page']) + 1
         for page in range(1, nb_pages):
             data += self.get_page(url, page)['items']
         return data
@@ -154,26 +150,26 @@ class Api(object):
 
         return [Image(json) for json in imgs]
 
-    def sync(self, overwrite=False):
+    def sync(self, folder=None, overwrite=False):
         '''
         Sync output all the image inside output folder
 
         Parameters
         ----------
+        folder: str, optional
+            Output folder to sync
         overwrite: bool, optional
             Overwrite all images
         '''
-        for camera in CAMERAS:
-            if not os.path.isdir(camera):
-                os.mkdir(camera)
-
-        for img in tqdm(self.get_imgs()):
+        root = os.getcwd() if not folder else folder
+        
+        for img in tqdm(self.get_imgs(order=['date_taken+asc'])):
             assert 'instrument' in img, f'Argument `instrument` is missing in `{img}`'
             assert 'sol' in img, f'Argument `sol` is missing in `{img}`'
 
-            fout = os.path.join(img.instrument.upper(), f'{img.sol:04d}')
+            fout = os.path.join(root, img.instrument.upper(), f'{img.sol:04d}')
             if not os.path.isdir(fout):
-                os.mkdir(fout)
+                os.makedirs(fout)
 
             fout = os.path.join(fout, img.imageid + '.PNG')
             

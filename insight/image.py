@@ -11,18 +11,10 @@ class Image(object):
     ----------
     json: dict
         API Image JSON response
-
-    Other Parameters
-    ----------------
-    name: str
-        Image ID
     '''
 
-    def __init__(self, json=None, **kwargs):
-        if json:
-            self.json = json
-        else:
-            self.json = kwargs
+    def __init__(self, json=None):
+        self.json = json
     
     def __str__(self):
         assert 'imageid' in self, 'Attribute `imageid` missing'
@@ -69,15 +61,15 @@ class Image(object):
             raise FileExistsError(f'File `{out}` exists')
 
         resp = requests.get(self.url, allow_redirects=True, stream=True)
+        assert resp.ok, resp.raise_for_status()
 
-        if resp.status_code == 200:
-            with open(out + '_tmp', 'wb') as f:
-                if verbose:
-                    for chunk in tqdm(resp.iter_content(1024), desc=f"Download {out}", unit=' kB'):
-                        f.write(chunk)
-                    print('')
-                else:
-                    for chunk in resp:
-                        f.write(chunk)
-            os.rename(out + '_tmp', out)
+        with open(out + '_tmp', 'wb') as f:
+            if verbose:
+                for chunk in tqdm(resp.iter_content(1024), desc=f"Download {out}", unit=' kB'):
+                    f.write(chunk)
+                print('')
+            else:
+                for chunk in resp:
+                    f.write(chunk)
+        os.rename(out + '_tmp', out)
 
