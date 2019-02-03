@@ -42,7 +42,7 @@ class Image(object):
     def json(self, json):
         self.__json = json
         for key, value in json.items():
-            if value is not None:
+            if value is not None or value != '':
                 setattr(self, key, value)    
 
     def download(self, out=None, overwrite=False, verbose=True):
@@ -71,7 +71,7 @@ class Image(object):
         resp = requests.get(self.url, allow_redirects=True, stream=True)
 
         if resp.status_code == 200:
-            with open(out, 'wb') as f:
+            with open(out + '_tmp', 'wb') as f:
                 if verbose:
                     for chunk in tqdm(resp.iter_content(1024), desc=f"Download {out}", unit=' kB'):
                         f.write(chunk)
@@ -79,4 +79,5 @@ class Image(object):
                 else:
                     for chunk in resp:
                         f.write(chunk)
+            os.rename(out + '_tmp', out)
 
